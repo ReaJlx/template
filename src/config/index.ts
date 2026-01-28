@@ -1,0 +1,21 @@
+/**
+ * Application configuration
+ */
+export const siteConfig = {
+  name: "App",
+  description: "Built with App Factory",
+  url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+} as const;
+
+export const appConfig = {
+  // Feature flags
+  features: {
+    auth: true,
+    analytics: false,
+  },
+  // Pagination defaults
+  pagination: {
+    defaultPageSize: 20,
+    maxPageSize: 100,
+  },
+} as const;
