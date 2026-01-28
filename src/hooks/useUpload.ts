@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 
-import type { UploadResponse } from '@/types/demo'
+import type { UploadResponse } from '@/types/api'
 
 interface UseUploadReturn {
   upload: (file: File) => Promise<string>
@@ -50,13 +50,21 @@ export function useUpload(): UseUploadReturn {
             const data = JSON.parse(xhr.responseText) as UploadResponse
             resolve(data.url)
           } catch (parseError) {
-            setError('Failed to parse upload response')
-            reject(parseError)
+            const errorMsg = 'Failed to parse upload response'
+            setError(errorMsg)
+            reject(new Error(errorMsg))
           }
         } else {
-          const errorMsg = `Upload failed: ${xhr.statusText || 'Unknown error'}`
-          setError(errorMsg)
-          reject(new Error(errorMsg))
+          try {
+            const errorData = JSON.parse(xhr.responseText)
+            const errorMsg = errorData.error || errorData.message || `Upload failed: ${xhr.statusText || 'Unknown error'}`
+            setError(errorMsg)
+            reject(new Error(errorMsg))
+          } catch {
+            const errorMsg = `Upload failed: ${xhr.statusText || 'Unknown error'}`
+            setError(errorMsg)
+            reject(new Error(errorMsg))
+          }
         }
       }
 

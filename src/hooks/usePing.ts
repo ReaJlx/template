@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 
-import type { PingResponse } from '@/types/demo'
+import type { PingResponse } from '@/types/api'
 
 interface UsePingReturn {
   data: PingResponse | null
@@ -22,16 +22,16 @@ export function usePing(): UsePingReturn {
 
     try {
       const res = await fetch('/api/ping')
-      const pingData = (await res.json()) as PingResponse
+      const json = await res.json()
 
       if (!res.ok) {
-        setError(pingData.error ?? 'Rate limit exceeded')
+        throw new Error(json.error || json.message || 'Failed to ping')
       }
 
-      setData(pingData)
+      setData(json)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch ping')
-      setData(null)
+      const message = err instanceof Error ? err.message : 'Failed to ping'
+      setError(message)
     } finally {
       setLoading(false)
     }

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 
-import type { StatsResponse } from '@/types/demo'
+import type { StatsResponse } from '@/types/api'
 
 interface UseStatsReturn {
   data: StatsResponse | null
@@ -22,14 +22,16 @@ export function useStats(): UseStatsReturn {
 
     try {
       const res = await fetch('/api/stats')
+      const json = await res.json()
+
       if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`)
+        throw new Error(json.error || json.message || 'Failed to fetch stats')
       }
-      const statsData = (await res.json()) as StatsResponse
-      setData(statsData)
+
+      setData(json)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch stats')
-      setData(null)
+      const message = err instanceof Error ? err.message : 'Failed to fetch stats'
+      setError(message)
     } finally {
       setLoading(false)
     }

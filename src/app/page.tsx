@@ -1,7 +1,19 @@
+/**
+ * Home Page
+ * 
+ * Landing page with navigation and feature status.
+ */
+
 import Image from "next/image";
 import Link from "next/link";
 
 import { getAuthUser } from "@/lib/auth";
+import {
+  isClerkConfigured,
+  isUpstashConfigured,
+  isCloudinaryConfigured,
+  isDatabaseConfigured,
+} from "@/config/env";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +24,13 @@ export default async function Home() {
   const SignOutButton = user
     ? (await import("@clerk/nextjs")).SignOutButton
     : null;
+
+  const featureStatus = [
+    { name: "Database", configured: isDatabaseConfigured() },
+    { name: "Clerk Auth", configured: isClerkConfigured() },
+    { name: "Upstash Cache", configured: isUpstashConfigured() },
+    { name: "Cloudinary Uploads", configured: isCloudinaryConfigured() },
+  ];
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -33,6 +52,28 @@ export default async function Home() {
             A Next.js starter with Clerk authentication, Drizzle ORM, and
             Tailwind CSS. Ready to build your next project.
           </p>
+        </div>
+
+        <div className="flex w-full flex-col gap-4">
+          <div className="flex flex-wrap gap-2">
+            {featureStatus.map((feature) => (
+              <span
+                key={feature.name}
+                className={`rounded-full px-3 py-1 text-xs font-medium ${
+                  feature.configured
+                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                    : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100"
+                }`}
+              >
+                {feature.configured ? "✓" : "⚠"} {feature.name}
+              </span>
+            ))}
+          </div>
+          {!featureStatus.every((f) => f.configured) && (
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Some services are not configured. Check your <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">.env</code> file.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
@@ -62,7 +103,7 @@ export default async function Home() {
               </Link>
               <Link
                 href="/sign-up"
-                className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
               >
                 Sign Up
               </Link>

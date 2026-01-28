@@ -1,8 +1,14 @@
 /**
  * Media Library
- * Re-exports from services/media for backward compatibility
- * @deprecated Import from @/services/media instead
+ * 
+ * Re-exports from services/media for convenience.
+ * @see @/services/media for the actual implementation
  */
 
-export { mediaService, mediaService as cloudinary } from '@/services/media'
-export { uploadImage, getImageUrl } from './deprecated-helpers'
+export { 
+  mediaService,
+  getMediaService,
+  type MediaService,
+  type MediaUploadResult,
+  type MediaTransformOptions
+} from '@/services/media'

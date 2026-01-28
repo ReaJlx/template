@@ -1,12 +1,13 @@
 /**
  * Cache Library
- * Re-exports from services/cache for backward compatibility
- * @deprecated Import from @/services/cache instead
+ * 
+ * Re-exports from services/cache for convenience.
+ * @see @/services/cache for the actual implementation
  */
 
-export { cacheService as redis, cacheService as ratelimit, cacheService } from '@/services/cache'
 export { 
-  cacheGet, 
-  cacheSet, 
-  cacheDel 
-} from './deprecated-helpers'
+  cacheService,
+  getCacheService,
+  type CacheService,
+  type RateLimitResult 
+} from '@/services/cache'

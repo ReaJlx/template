@@ -7,7 +7,7 @@ import { count } from 'drizzle-orm'
 
 import type { Database } from '@/lib/db'
 import { users } from '@/lib/db/schema'
-import type { StatsData } from '@/types/demo'
+import type { StatsData } from '@/types/api'
 
 import type { CacheRepository } from './cache.repository'
 import type { CacheService, RateLimitResult } from './cache.types'
@@ -18,7 +18,7 @@ const RATE_LIMIT_PREFIX = 'ping:'
 export class DefaultCacheService implements CacheService {
   constructor(
     private readonly repository: CacheRepository,
-    private readonly db: Database
+    private readonly getDatabase: () => Database
   ) {}
 
   async getStats(): Promise<StatsData | null> {
@@ -34,7 +34,16 @@ export class DefaultCacheService implements CacheService {
   }
 
   async fetchAndCacheStats(ttlSeconds: number = 60): Promise<StatsData> {
-    const [row] = await this.db.select({ userCount: count() }).from(users)
+    let db: Database
+    try {
+      db = this.getDatabase()
+    } catch (error) {
+      throw new Error(
+        'Database is not configured. Please set DATABASE_URL to use the stats demo.'
+      )
+    }
+
+    const [row] = await db.select({ userCount: count() }).from(users)
 
     const data: StatsData = {
       userCount: row?.userCount ?? 0,

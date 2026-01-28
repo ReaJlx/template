@@ -3,7 +3,7 @@
  * Low-level data access for Cloudinary
  */
 
-import type { ConfigOptions } from 'cloudinary'
+import { getCloudinaryEnv } from '@/config/env'
 
 import type { MediaTransformOptions, MediaUploadResult } from './media.types'
 
@@ -15,16 +15,36 @@ export interface MediaRepository {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type CloudinaryV2 = any
 
+/**
+ * Cloudinary repository with lazy configuration
+ */
 export class CloudinaryRepository implements MediaRepository {
-  constructor(private readonly cloudinary: CloudinaryV2) {
+  private configured = false
+
+  constructor(private readonly cloudinary: CloudinaryV2) {}
+
+  /**
+   * Ensure Cloudinary is configured (lazy initialization)
+   */
+  private ensureConfigured(): void {
+    if (this.configured) {
+      return
+    }
+
+    const env = getCloudinaryEnv()
+    
     this.cloudinary.config({
-      cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET,
+      cloud_name: env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+      api_key: env.CLOUDINARY_API_KEY,
+      api_secret: env.CLOUDINARY_API_SECRET,
     })
+
+    this.configured = true
   }
 
   async upload(file: Buffer, folder: string): Promise<MediaUploadResult> {
+    this.ensureConfigured()
+
     return new Promise((resolve, reject) => {
       this.cloudinary.uploader.upload_stream(
         { folder, resource_type: 'image' },
@@ -43,6 +63,8 @@ export class CloudinaryRepository implements MediaRepository {
   }
 
   getUrl(publicId: string, options?: MediaTransformOptions): string {
+    this.ensureConfigured()
+
     return this.cloudinary.url(publicId, {
       secure: true,
       transformation: [

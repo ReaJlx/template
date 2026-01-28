@@ -2,7 +2,7 @@
  * Cache Service Types
  */
 
-import type { StatsData } from '@/types/demo'
+import type { StatsData } from '@/types/api'
 
 export interface RateLimitResult {
   success: boolean

@@ -1,9 +1,16 @@
+/**
+ * Root Layout
+ * 
+ * Conditionally wraps the app with ClerkProvider if configured.
+ */
+
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
 
 import type { Metadata } from "next";
+import { isClerkPublishableConfigured } from "@/config/public-env";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,12 +32,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const clerkConfigured = isClerkPublishableConfigured();
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? (
+        {clerkConfigured ? (
           <ClerkProvider>{children}</ClerkProvider>
         ) : (
           children

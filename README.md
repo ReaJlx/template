@@ -1,120 +1,169 @@
 # App Factory Template
 
-**Rapid, production-ready Next.js 16 starter for building modern web apps.**
-
-![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6?logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-38bdf8?logo=tailwindcss&logoColor=white)
+A production-ready Next.js template with authentication, database, caching, and media uploads.
 
 ## Features
 
-- Next.js 16 App Router
-- Clerk authentication (sign-in, sign-up, protected routes, webhook sync)
-- Supabase Postgres + Drizzle ORM
-- Upstash Redis for caching and rate limiting
-- Cloudinary uploads and media handling
-- Tailwind CSS 4 styling
-- Strict TypeScript + ESLint
-- SOLID services/repositories architecture
+- **Framework**: Next.js 16 with App Router
+- **Authentication**: Clerk (optional)
+- **Database**: PostgreSQL with Drizzle ORM (optional)
+- **Cache**: Upstash Redis (optional)
+- **Media**: Cloudinary uploads (optional)
+- **Styling**: Tailwind CSS v4
 
-## Tech Stack
-
-| Technology | Purpose |
-| --- | --- |
-| Next.js 16 | App framework with App Router |
-| React 19 | UI library |
-| TypeScript | Type safety and DX |
-| Tailwind CSS 4 | Utility-first styling |
-| Clerk | Authentication and user management |
-| Supabase Postgres | Database |
-| Drizzle ORM | Type-safe database access |
-| Upstash Redis | Caching and rate limiting |
-| Cloudinary | Media storage and transformations |
+All services are optional and lazily initialized - the app gracefully handles missing configuration.
 
 ## Quick Start
 
 ```bash
-git clone <YOUR_REPO_URL>
+# 1. Clone and install
+git clone <repo>
 cd template
 npm install
-cp .env.example .env.local
-```
 
-Fill in the environment variables using your service dashboards:
-- Clerk: https://dashboard.clerk.com
-- Supabase: https://supabase.com/dashboard
-- Upstash: https://console.upstash.com
-- Cloudinary: https://console.cloudinary.com
+# 2. Configure environment
+cp .env.example .env
+# Edit .env with your credentials
 
-Start the dev server:
-```bash
+# 3. Run development server
 npm run dev
 ```
 
-Run database migrations (Drizzle push):
-```bash
-npm run db:push
-```
+## Environment Variables
+
+See `.env.example` for all available variables. Here's a quick reference:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | No | PostgreSQL connection string |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | No | Clerk publishable key |
+| `CLERK_SECRET_KEY` | No | Clerk secret key |
+| `CLERK_WEBHOOK_SECRET` | No | Clerk webhook signing secret |
+| `UPSTASH_REDIS_REST_URL` | No | Upstash Redis REST URL |
+| `UPSTASH_REDIS_REST_TOKEN` | No | Upstash Redis REST token |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | No | Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | No | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | No | Cloudinary API secret |
 
 ## Project Structure
 
 ```
 src/
-  app/            # App Router routes, layouts, pages
-  components/     # Reusable UI components
-  config/         # App and service configuration
-  hooks/          # Custom React hooks
-  lib/            # Shared utilities
-  services/       # Business logic (service layer)
-  types/          # Shared TypeScript types
-  proxy.ts        # Server-side proxy helpers
+├── app/                    # Next.js App Router pages
+│   ├── api/               # API routes
+│   ├── dashboard/         # Protected dashboard page
+│   ├── demo/              # Demo pages (cache, media)
+│   ├── sign-in/           # Clerk sign-in
+│   └── sign-up/           # Clerk sign-up
+├── components/            # React components
+│   └── ui/               # Reusable UI components
+├── config/               # Configuration & env validation
+├── hooks/                # React hooks
+├── lib/                  # Core utilities
+│   ├── auth/            # Authentication helpers
+│   ├── cache/           # Cache re-exports
+│   ├── db/              # Database connection & schema
+│   ├── media/           # Media re-exports
+│   └── utils/           # Utility functions
+├── services/            # Business logic layer
+│   ├── cache/           # Cache service (Upstash)
+│   ├── media/           # Media service (Cloudinary)
+│   └── user/            # User service (Drizzle)
+└── types/               # Global TypeScript types
 ```
-
-## Environment Variables
-
-| Variable | Description |
-| --- | --- |
-| NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY | Clerk publishable key |
-| CLERK_SECRET_KEY | Clerk secret key |
-| CLERK_WEBHOOK_SECRET | Clerk webhook signing secret |
-| NEXT_PUBLIC_CLERK_SIGN_IN_URL | Sign-in route |
-| NEXT_PUBLIC_CLERK_SIGN_UP_URL | Sign-up route |
-| NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL | Post sign-in redirect |
-| NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL | Post sign-up redirect |
-| DATABASE_URL | Postgres connection string (Supabase) |
-| UPSTASH_REDIS_REST_URL | Upstash Redis REST endpoint |
-| UPSTASH_REDIS_REST_TOKEN | Upstash Redis REST token |
-| NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME | Cloudinary cloud name |
-| CLOUDINARY_API_KEY | Cloudinary API key |
-| CLOUDINARY_API_SECRET | Cloudinary API secret |
-
-## Scripts
-
-- `npm run dev` — Start development server
-- `npm run build` — Build for production
-- `npm run start` — Run production server
-- `npm run lint` — Lint codebase
-- `npm run db:generate` — Generate Drizzle migrations
-- `npm run db:migrate` — Run Drizzle migrations
-- `npm run db:push` — Push schema to database
-- `npm run db:studio` — Open Drizzle Studio
 
 ## Architecture
 
-This template follows a services/repositories pattern to keep business logic isolated and testable. Services encapsulate use cases, while repositories handle data access. This separation keeps the codebase SOLID-friendly and easy to scale.
+### Service Pattern
 
-## Deployment
+Services follow a clean architecture with:
+- **Repository**: Low-level data access
+- **Service**: Business logic
+- **Types**: Service-specific types (colocated)
 
-**Vercel (recommended)**
+```typescript
+// Example usage
+import { userService } from '@/services/user'
 
-- One-click deploy: https://vercel.com/new
-- Or via CLI:
-
-```bash
-npm i -g vercel
-vercel
+const user = await userService.getUserByClerkId(clerkId)
 ```
 
-## Build Note
+### Lazy Initialization
 
-Next.js 16 builds are run with the `--webpack` flag by default (`npm run build`) to avoid current Turbopack issues.
+All services are lazily initialized to prevent startup crashes when env vars are missing:
+
+```typescript
+import { cacheService } from '@/services/cache'
+
+// Only initializes when first accessed
+const stats = await cacheService.getStats()
+```
+
+### Environment Validation
+
+Environment variables are validated with Zod when services are accessed:
+
+```typescript
+import { getClerkEnv, isClerkConfigured } from '@/config/env'
+
+// Check if configured (non-throwing)
+if (isClerkConfigured()) {
+  // Use the service
+}
+
+// Get validated env (throws if invalid)
+const env = getClerkEnv()
+```
+
+## Database
+
+### Setup
+
+1. Get a PostgreSQL database (Neon, Supabase, etc.)
+2. Set `DATABASE_URL` in `.env`
+3. Push schema: `npm run db:push`
+
+### Commands
+
+```bash
+npm run db:generate  # Generate migrations
+npm run db:migrate   # Run migrations
+npm run db:push      # Push schema directly
+npm run db:studio    # Open Drizzle Studio
+```
+
+## Authentication
+
+### Clerk Setup
+
+1. Create account at [clerk.com](https://clerk.com)
+2. Create application
+3. Copy keys to `.env`
+
+### Webhook (Optional)
+
+To sync user data to your database:
+
+1. Add webhook endpoint in Clerk dashboard: `https://yourdomain.com/api/webhooks/clerk`
+2. Subscribe to: `user.created`, `user.updated`, `user.deleted`
+3. Copy signing secret to `CLERK_WEBHOOK_SECRET`
+
+## Demos
+
+The template includes working demos:
+
+- `/demo/cache` - Cache hits/misses and rate limiting
+- `/demo/media` - Image upload to Cloudinary
+
+## Development
+
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run start    # Start production server
+npm run lint     # Run ESLint
+```
+
+## License
+
+MIT
