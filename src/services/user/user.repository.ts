@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 
-import { db } from '@/lib/db'
+import type { Database } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import type { NewUser, User } from '@/lib/db/schema/users'
 
@@ -11,9 +11,11 @@ export interface UserRepository {
   deleteByClerkId(clerkId: string): Promise<void>
 }
 
-class DrizzleUserRepository implements UserRepository {
+export class DrizzleUserRepository implements UserRepository {
+  constructor(private readonly db: Database) {}
+
   async findByClerkId(clerkId: string): Promise<User | null> {
-    const result = await db
+    const result = await this.db
       .select()
       .from(users)
       .where(eq(users.clerkId, clerkId))
@@ -23,7 +25,7 @@ class DrizzleUserRepository implements UserRepository {
   }
 
   async create(data: NewUser): Promise<User> {
-    const result = await db.insert(users).values(data).returning()
+    const result = await this.db.insert(users).values(data).returning()
     return result[0]
   }
 
@@ -31,7 +33,7 @@ class DrizzleUserRepository implements UserRepository {
     clerkId: string,
     data: Partial<NewUser>
   ): Promise<User | null> {
-    const result = await db
+    const result = await this.db
       .update(users)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(users.clerkId, clerkId))
@@ -41,8 +43,6 @@ class DrizzleUserRepository implements UserRepository {
   }
 
   async deleteByClerkId(clerkId: string): Promise<void> {
-    await db.delete(users).where(eq(users.clerkId, clerkId))
+    await this.db.delete(users).where(eq(users.clerkId, clerkId))
   }
 }
-
-export const userRepository = new DrizzleUserRepository()

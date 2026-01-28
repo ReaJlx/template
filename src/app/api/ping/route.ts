@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 
-import { ratelimit } from '@/lib/cache'
+import { cacheService } from '@/services/cache'
 
-async function getClientIp() {
+async function getClientIp(): Promise<string> {
   const headerList = await headers()
   const forwarded = headerList.get('x-forwarded-for')
   const realIp = headerList.get('x-real-ip')
@@ -17,7 +17,7 @@ async function getClientIp() {
 
 export async function GET() {
   const ip = await getClientIp()
-  const { success, remaining, reset } = await ratelimit.limit(`ping:${ip}`)
+  const { success, remaining, reset } = await cacheService.checkRateLimit(ip)
 
   const response = {
     ok: success,

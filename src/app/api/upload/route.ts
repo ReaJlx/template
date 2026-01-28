@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 
-import { uploadImage } from '@/lib/media'
+import { mediaService } from '@/services/media'
 
 export async function POST(request: Request) {
   const { userId } = await auth()
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer())
-    const url = await uploadImage(buffer)
+    const { url } = await mediaService.uploadImage(buffer)
 
     return NextResponse.json({ url })
   } catch (error) {

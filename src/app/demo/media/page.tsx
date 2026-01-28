@@ -1,17 +1,21 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import { CldImage } from 'next-cloudinary'
+
+import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { FileInput } from '@/components/ui/Input'
+import { useUpload } from '@/hooks/useUpload'
 
 export default function MediaDemoPage() {
   const router = useRouter()
   const { isLoaded, isSignedIn } = useAuth()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [status, setStatus] = useState('Select an image to upload.')
-  const [progress, setProgress] = useState(0)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const { upload, uploading, progress, error, reset } = useUpload()
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -19,25 +23,21 @@ export default function MediaDemoPage() {
     }
   }, [isLoaded, isSignedIn, router])
 
-  const canUpload = useMemo(() => Boolean(selectedFile), [selectedFile])
-
   async function handleUpload() {
-    if (!selectedFile) {
-      setStatus('Please select a file first.')
-      return
-    }
-
-    setStatus('Uploading...')
-    setProgress(0)
+    if (!selectedFile) return
 
     try {
-      const url = await uploadFile(selectedFile, setProgress)
+      const url = await upload(selectedFile)
       setImageUrl(url)
-      setStatus('Upload complete!')
-    } catch (error) {
-      console.error(error)
-      setStatus('Upload failed. Please try again.')
+    } catch {
+      // Error is handled by the hook
     }
+  }
+
+  function handleFileChange(file: File | null) {
+    setSelectedFile(file)
+    setImageUrl(null)
+    reset()
   }
 
   if (!isLoaded || !isSignedIn) {
@@ -54,83 +54,58 @@ export default function MediaDemoPage() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="flex flex-col gap-4">
-            <input
-              type="file"
+        <Card>
+          <CardHeader>
+            <CardTitle>Upload</CardTitle>
+            <CardDescription>Select an image file to upload</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <FileInput
               accept="image/*"
-              onChange={(event) => {
-                const file = event.target.files?.[0] ?? null
-                setSelectedFile(file)
-                setStatus(file ? 'Ready to upload.' : 'Select an image to upload.')
-                setProgress(0)
-              }}
+              onChange={handleFileChange}
+              disabled={uploading}
             />
-            <button
-              type="button"
+            <Button
               onClick={handleUpload}
-              disabled={!canUpload}
-              className="h-11 w-full rounded-full bg-foreground text-background transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={!selectedFile || uploading}
+              isLoading={uploading}
+              className="w-full"
             >
-              Upload Image
-            </button>
-            <div className="text-sm text-zinc-600 dark:text-zinc-400">
-              <p>{status}</p>
-              {progress > 0 && progress < 100 && (
-                <p className="mt-1">{progress}%</p>
-              )}
-            </div>
-          </div>
-        </div>
+              {uploading ? `Uploading ${progress}%` : 'Upload Image'}
+            </Button>
+            {error && (
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            )}
+            {uploading && progress > 0 && progress < 100 && (
+              <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                <div
+                  className="h-full bg-foreground transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {imageUrl && (
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-            <CldImage
-              src={imageUrl}
-              alt="Uploaded image"
-              width={720}
-              height={480}
-              deliveryType="fetch"
-              className="h-auto w-full rounded-xl object-cover"
-            />
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Preview</CardTitle>
+              <CardDescription>Your uploaded image</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CldImage
+                src={imageUrl}
+                alt="Uploaded image"
+                width={720}
+                height={480}
+                deliveryType="fetch"
+                className="h-auto w-full rounded-xl object-cover"
+              />
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
   )
-}
-
-function uploadFile(file: File, onProgress: (value: number) => void): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
-    const formData = new FormData()
-
-    formData.append('file', file)
-
-    xhr.open('POST', '/api/upload')
-
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const percent = Math.round((event.loaded / event.total) * 100)
-        onProgress(percent)
-      }
-    }
-
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          const data = JSON.parse(xhr.responseText)
-          resolve(data.url)
-        } catch (error) {
-          reject(error)
-        }
-      } else {
-        reject(new Error('Upload failed'))
-      }
-    }
-
-    xhr.onerror = () => reject(new Error('Upload failed'))
-
-    xhr.send(formData)
-  })
 }

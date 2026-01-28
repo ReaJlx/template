@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { requireAuth } from "@/lib/auth";
-import { userService } from "@/services/user/user.service";
+import { userService } from "@/services/user";
 
 export const dynamic = "force-dynamic";
 

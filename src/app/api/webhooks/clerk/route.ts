@@ -1,22 +1,10 @@
 import { headers } from 'next/headers'
 import { Webhook } from 'svix'
 
-import { userService } from '@/services/user/user.service'
+import { userService } from '@/services/user'
+import type { ClerkWebhookEvent, ClerkWebhookUser } from '@/types/webhooks'
 
-type ClerkWebhookUser = {
-  id: string
-  email_addresses?: Array<{ email_address: string }>
-  first_name?: string | null
-  last_name?: string | null
-  image_url?: string | null
-}
-
-type ClerkWebhookEvent = {
-  type: 'user.created' | 'user.updated' | 'user.deleted'
-  data: ClerkWebhookUser
-}
-
-function getDisplayName(user: ClerkWebhookUser) {
+function getDisplayName(user: ClerkWebhookUser): string | null {
   const fullName = [user.first_name, user.last_name]
     .filter(Boolean)
     .join(' ')
