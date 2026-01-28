@@ -2,11 +2,17 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { requireAuth } from "@/lib/auth";
+import { userService } from "@/services/user/user.service";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const user = await requireAuth();
+  const dbUser = await userService.getUserByClerkId(user.id);
+  const isSynced = Boolean(dbUser);
+  const createdAt = dbUser?.createdAt
+    ? new Date(dbUser.createdAt).toLocaleString()
+    : "—";
   const { SignOutButton } = await import("@clerk/nextjs");
 
   return (
@@ -32,6 +38,12 @@ export default async function DashboardPage() {
             </p>
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
               {user.emailAddresses[0]?.emailAddress}
+            </p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-500">
+              DB Sync: {isSynced ? "Synced" : "Pending"}
+            </p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-500">
+              Created: {createdAt}
             </p>
           </div>
         </div>
